@@ -1,0 +1,113 @@
+.mm-navbar {
+  position: relative;
+  z-index: 20;
+}
+
+/* ---------- logo ---------- */
+.mm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mm-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0EA5A0, #1E7F72);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 6px 14px rgba(14, 165, 160, 0.35);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.mm-brand:hover .mm-logo {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 10px 20px rgba(14, 165, 160, 0.45);
+}
+
+.mm-brand:active .mm-logo {
+  transform: scale(0.9) rotate(4deg);
+}
+
+/* ---------- city selector wrapper ---------- */
+.mm-city-wrap {
+  position: relative;
+  border-radius: 999px;
+  transition: box-shadow 0.25s ease;
+}
+
+.mm-city-wrap:hover,
+.mm-city-wrap:focus-within {
+  box-shadow: 0 0 0 3px rgba(255, 182, 39, 0.35);
+  border-radius: 999px;
+}
+
+/* ---------- nav actions layout ---------- */
+.mm-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- magnetic buttons ---------- */
+.mm-mag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.mm-nav-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #1B1F3B;
+  background: rgba(27, 31, 59, 0.05);
+}
+
+.mm-nav-btn:hover {
+  background: rgba(27, 31, 59, 0.1);
+  box-shadow: 0 6px 14px rgba(27, 31, 59, 0.12);
+}
+
+.mm-nav-btn-store {
+  background: #fff;
+  border: 1.5px solid rgba(27, 31, 59, 0.12);
+}
+.mm-nav-btn-store:hover {
+  border-color: #FFB627;
+  box-shadow: 0 8px 18px rgba(255, 182, 39, 0.25);
+}
+
+.mm-nav-btn-primary {
+  background: linear-gradient(135deg, #0EA5A0, #1E7F72);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(14, 165, 160, 0.35);
+}
+.mm-nav-btn-primary:hover {
+  box-shadow: 0 10px 22px rgba(14, 165, 160, 0.45);
+}
+
+.mm-pressed {
+  transition: transform 0.05s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-mag-btn, .mm-logo {
+    transition: none !important;
+  }
+}

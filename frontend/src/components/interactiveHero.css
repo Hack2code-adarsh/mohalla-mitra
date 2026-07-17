@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+.mm-hero-playground {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  border-radius: 20px;
+  background: radial-gradient(circle at 80% 15%, #1B2A4E 0%, #14213D 55%, #0D1730 100%);
+  overflow: hidden;
+  margin: 32px 0;
+  touch-action: none;
+  box-shadow: 0 20px 50px rgba(20, 33, 61, 0.25);
+}
+
+.mm-hero-copy {
+  position: absolute;
+  top: 36px;
+  left: 36px;
+  max-width: 320px;
+  color: #FFFDF8;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mm-hero-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #F4A93B;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.mm-hero-copy h2 {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 0 0 12px;
+}
+
+.mm-hero-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 253, 248, 0.7);
+  margin: 0;
+}
+
+.mm-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #FFFDF8;
+  color: var(--chip-color);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  border: 2px solid var(--chip-color);
+  will-change: transform;
+  z-index: 2;
+}
+
+.mm-chip svg {
+  color: var(--chip-color);
+}
+
+.mm-chip span {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: #14213D;
+}
+
+.mm-chip-grabbed {
+  cursor: grabbing;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+@media (max-width: 700px) {
+  .mm-hero-playground {
+    min-height: 380px;
+  }
+  .mm-hero-copy {
+    top: 24px;
+    left: 24px;
+    max-width: 220px;
+  }
+  .mm-hero-copy h2 {
+    font-size: 24px;
+  }
+  .mm-chip {
+    width: 68px;
+    height: 68px;
+  }
+}
