@@ -14,10 +14,10 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-DB_PATH = Path(__file__).with_name("mohalla_mitra.db")
+DB_PATH = Path(__file__).with_name("Service Sphere.db")
 MODEL_PATH = Path(__file__).with_name("vendor_ranking_model.pkl")
 
-app = FastAPI(title="Mohalla Mitra API", version="3.0.0")
+app = FastAPI(title="Service Sphere API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -312,7 +312,7 @@ def classify_sentiment(compound_score: float) -> str:
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "project": "Mohalla Mitra", "cities": CITIES, "ml_model_loaded": ranking_model is not None}
+    return {"status": "ok", "project": "Service Sphere", "cities": CITIES, "ml_model_loaded": ranking_model is not None}
 
 
 @app.get("/api/cities")

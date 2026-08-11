@@ -1,4 +1,4 @@
-# Mohalla Mitra — Upgraded Full-Stack Project
+# Service Sphere — Upgraded Full-Stack Project
 
 A practical local services marketplace for Indian cities. Customers discover nearby vendors, book services, and track orders. Vendors manage incoming orders from their dashboard.
 
@@ -30,7 +30,7 @@ Google login is included as a frontend-ready placeholder. To make it real, creat
 ## Folder structure
 
 ```text
-mohalla-mitra-upgraded/
+Service Sphere-upgraded/
   backend/
     main.py
     requirements.txt
@@ -58,7 +58,7 @@ mohalla-mitra-upgraded/
 ## Run backend on Windows PowerShell
 
 ```powershell
-cd C:\Users\Adarsh\Downloads\mohalla-mitra-upgraded\backend
+cd C:\Users\Adarsh\Downloads\Service Sphere-upgraded\backend
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -74,7 +74,7 @@ http://127.0.0.1:8000
 ## Run frontend in second PowerShell terminal
 
 ```powershell
-cd C:\Users\Adarsh\Downloads\mohalla-mitra-upgraded\frontend
+cd C:\Users\Adarsh\Downloads\Service Sphere-upgraded\frontend
 npm install
 npm run dev
 ```

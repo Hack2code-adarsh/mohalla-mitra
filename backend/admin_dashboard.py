@@ -1,8 +1,8 @@
 """
-Mohalla Mitra - Database Admin Dashboard
+Service Sphere - Database Admin Dashboard
 Run with: streamlit run admin_dashboard.py
 
-Place this file in the same folder as mohalla_mitra.db (the backend folder).
+Place this file in the same folder as Service Sphere.db (the backend folder).
 """
 
 import streamlit as st
@@ -11,12 +11,12 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 
-st.set_page_config(page_title="Mohalla Mitra Admin", layout="wide")
+st.set_page_config(page_title="Service Sphere Admin", layout="wide")
 
-DB_PATH = Path(__file__).with_name("mohalla_mitra.db")
+DB_PATH = Path(__file__).with_name("Service Sphere.db")
 
 if not DB_PATH.exists():
-    st.error(f"Database not found at: {DB_PATH}\n\nPlace this script in your `backend` folder, next to mohalla_mitra.db.")
+    st.error(f"Database not found at: {DB_PATH}\n\nPlace this script in your `backend` folder, next to Service Sphere.db.")
     st.stop()
 
 CITIES = ["Kanpur", "Delhi", "Lucknow", "Gurugram", "Noida"]
@@ -42,7 +42,7 @@ def now_iso():
     return datetime.utcnow().isoformat() + "Z"
 
 
-st.title("🏘️ Mohalla Mitra — Admin Dashboard")
+st.title("🏘️ Service Sphere — Admin Dashboard")
 st.caption(f"Connected to: {DB_PATH}")
 
 tab_users, tab_vendors, tab_bookings, tab_sql = st.tabs(

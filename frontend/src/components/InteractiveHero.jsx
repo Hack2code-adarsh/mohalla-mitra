@@ -148,7 +148,7 @@ export default function InteractiveHero() {
         <p className="mm-hero-eyebrow">Drag a service, feel it move</p>
         <h2>Your mohalla, one tap away</h2>
         <p className="mm-hero-sub">
-          Touch and flick any tile — a quick feel for how fast Mohalla Mitra
+          Touch and flick any tile — a quick feel for how fast Service Sphere
           connects you to help nearby.
         </p>
       </div>

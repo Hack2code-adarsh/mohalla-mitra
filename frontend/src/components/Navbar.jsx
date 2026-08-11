@@ -47,8 +47,8 @@ export default function Navbar() {
   return (
     <header className="navbar mm-navbar">
       <button className="brand mm-brand" onClick={() => navigate('home')}>
-        <span className="logo mm-logo">मि</span>
-        <span>Mohalla Mitra</span>
+        <span className="logo mm-logo">SS</span>
+        <span>Service Sphere</span>
       </button>
 
       <div className="nav-actions mm-nav-actions">

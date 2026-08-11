@@ -1,5 +1,5 @@
 """
-Mohalla Mitra — Vendor Ranking Model Trainer
+Service Sphere — Vendor Ranking Model Trainer
 Run with: python train_ranking_model.py
 
 This generates synthetic training data and trains a GradientBoostingRegressor

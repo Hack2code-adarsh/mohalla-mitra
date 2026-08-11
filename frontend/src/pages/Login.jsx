@@ -209,7 +209,7 @@ export default function Login() {
             </form>
           )}
 
-          <p className="mm-footnote">Password login is for your Mohalla Mitra account only. Google login never shares or stores your Gmail password.</p>
+          <p className="mm-footnote">Password login is for your Service Sphere account only. Google login never shares or stores your Gmail password.</p>
         </div>
       </div>
     </div>
