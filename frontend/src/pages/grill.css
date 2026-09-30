@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
+
+/* ===== Page layout: 70/30 split ===== */
+.grill-page{
+  display:grid;
+  grid-template-columns:1fr 400px;
+  height:100vh;
+  font-family:'Inter',system-ui,sans-serif;
+  background:#F7F7F9;
+  overflow:hidden;
+}
+.grill-loading{
+  display:grid;place-items:center;height:100vh;
+  font-family:'Inter',sans-serif;color:#6b7280;font-size:16px;
+  background:#F7F7F9;
+}
+
+/* ===== LEFT: Main content ===== */
+.grill-main{
+  overflow-y:auto;
+  padding:0 32px 32px;
+  background:#F7F7F9;
+}
+.grill-main::-webkit-scrollbar{width:6px}
+.grill-main::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:6px}
+
+/* Back bar */
+.grill-backbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;
+  position:sticky;top:0;
+  background:#F7F7F9;z-index:10;
+}
+.grill-back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;color:#374151;
+  transition:color .15s;
+}
+.grill-back-btn:hover{color:#1B9A7B}
+
+/* Header */
+.grill-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:16px;
+}
+.grill-date{font-size:13px;color:#9ca3af;font-weight:500;display:block;margin-bottom:4px}
+.grill-restaurant-name{
+  font-family:'Poppins',sans-serif;
+  font-size:32px;font-weight:800;color:#1F2937;
+  margin:0 0 8px;letter-spacing:-.5px;
+}
+.grill-meta{
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  font-size:13px;color:#6b7280;
+}
+.grill-rating-badge{
+  display:flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,#1B9A7B,#16A34A);
+  color:#fff;padding:2px 10px;border-radius:6px;
+  font-size:12px;font-weight:700;
+}
+.grill-cat-tag{
+  background:#f3f4f6;color:#374151;
+  padding:2px 10px;border-radius:6px;font-weight:600;
+}
+
+/* Search */
+.grill-search-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid #e5e7eb;
+  border-radius:12px;padding:8px 8px 8px 16px;
+  width:320px;max-width:100%;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.grill-search-input{
+  flex:1;border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:14px;color:#1F2937;
+}
+.grill-search-input::placeholder{color:#9ca3af}
+.grill-filter-btn{
+  background:#1B9A7B;border:none;color:#fff;
+  width:36px;height:36px;border-radius:8px;cursor:pointer;
+  display:grid;place-items:center;
+  transition:background .15s;
+}
+.grill-filter-btn:hover{background:#16A34A}
+
+/* Category section */
+.grill-cat-section{margin-bottom:24px}
+.grill-cat-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.grill-cat-title{font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#1F2937;margin:0}
+.grill-view-all{
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;color:#1B9A7B;
+  transition:color .15s;
+}
+.grill-view-all:hover{color:#16A34A}
+
+.grill-chips{display:flex;gap:8px;flex-wrap:wrap}
+.grill-chip{
+  padding:8px 18px;border-radius:999px;border:none;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;
+  background:#fff;color:#374151;
+  border:1px solid #e5e7eb;
+  transition:all .15s;
+}
+.grill-chip:hover{border-color:#1B9A7B;color:#1B9A7B}
+.grill-chip.active{
+  background:#1B9A7B;color:#fff;border-color:#1B9A7B;
+  box-shadow:0 4px 12px rgba(27,154,123,0.25);
+}
+
+/* Food cards grid */
+.grill-food-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+.grill-no-items{
+  grid-column:1 / -1;
+  text-align:center;padding:60px 20px;
+  background:#fff;border-radius:16px;
+  border:1px solid #e5e7eb;
+}
+.grill-food-card{
+  background:#fff;border-radius:16px;
+  padding:20px;position:relative;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06),0 6px 16px rgba(0,0,0,0.04);
+  transition:transform .15s,box-shadow .15s;
+  display:flex;flex-direction:column;
+}
+.grill-food-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.08),0 12px 32px rgba(0,0,0,0.06);
+}
+.grill-heart{
+  position:absolute;top:16px;right:16px;
+  background:none;border:none;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;
+  transition:background .15s;
+  z-index:2;
+}
+.grill-heart:hover{background:#fef2f2}
+.grill-food-img-wrap{
+  display:grid;place-items:center;margin-bottom:14px;
+}
+.grill-food-img{
+  width:120px;height:120px;border-radius:50%;object-fit:cover;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+.grill-food-info{flex:1;display:flex;flex-direction:column}
+.grill-food-name-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
+}
+.grill-food-name{font-size:16px;font-weight:700;color:#1F2937;margin:0}
+.grill-food-price{font-size:16px;font-weight:700;color:#1B9A7B}
+.grill-food-desc{font-size:12px;color:#9ca3af;margin:0 0 14px;line-height:1.4;flex:1}
+.grill-food-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.grill-food-rating{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:#374151}
+.grill-add-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:7px 14px;border-radius:8px;border:none;cursor:pointer;
+  background:#1B9A7B;color:#fff;
+  font-family:inherit;font-size:12px;font-weight:600;
+  transition:background .15s,transform .1s;
+}
+.grill-add-btn:hover{background:#16A34A}
+.grill-add-btn:active{transform:scale(.95)}
+
+/* ===== RIGHT: My Order sidebar ===== */
+.grill-sidebar{
+  background:#fff;
+  border-left:1px solid #e5e7eb;
+  box-shadow:-4px 0 12px rgba(0,0,0,0.04);
+  display:flex;flex-direction:column;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* Order header */
+.grill-order-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:24px 24px 16px;
+  flex-shrink:0;
+}
+.grill-order-title{font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;color:#1F2937;margin:0}
+.grill-close-btn{
+  width:32px;height:32px;border-radius:8px;
+  background:#f3f4f6;border:none;cursor:pointer;
+  display:grid;place-items:center;color:#6b7280;
+  transition:background .15s,color .15s;
+}
+.grill-close-btn:hover{background:#EF4444;color:#fff}
+
+/* Order type tabs */
+.grill-order-tabs{
+  display:flex;gap:8px;padding:0 24px 16px;
+  flex-shrink:0;
+}
+.grill-order-tab{
+  padding:7px 18px;border-radius:999px;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;
+  border:1.5px solid #1B9A7B;background:#fff;color:#1B9A7B;
+  transition:all .15s;
+}
+.grill-order-tab.active{
+  background:#1B9A7B;color:#fff;
+  box-shadow:0 3px 10px rgba(27,154,123,0.25);
+}
+
+/* Order items list */
+.grill-order-items{
+  flex:1;overflow-y:auto;
+  padding:0 24px 12px;
+}
+.grill-order-items::-webkit-scrollbar{width:4px}
+.grill-order-items::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:4px}
+.grill-empty-cart{
+  text-align:center;padding:40px 20px;
+}
+.grill-order-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:14px;
+  background:#fff;
+  border:1px solid #f3f4f6;
+  border-radius:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom:10px;
+}
+.grill-order-thumb{
+  width:56px;height:56px;border-radius:12px;object-fit:cover;flex-shrink:0;
+}
+.grill-order-item-info{flex:1;display:flex;flex-direction:column;gap:2px}
+.grill-order-item-name{font-size:14px;font-weight:700;color:#1F2937;margin:0}
+.grill-order-item-variant{font-size:12px;color:#9ca3af}
+.grill-order-item-price{font-size:14px;font-weight:700;color:#1B9A7B;margin-top:2px}
+.grill-order-item-right{
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;
+}
+.grill-trash-btn{
+  background:none;border:none;cursor:pointer;
+  color:#d1d5db;padding:4px;
+  transition:color .15s;
+}
+.grill-trash-btn:hover{color:#EF4444}
+.grill-qty-stepper{
+  display:flex;align-items:center;gap:0;
+  border:1.5px solid #1B9A7B;border-radius:8px;overflow:hidden;
+}
+.grill-qty-stepper button{
+  width:28px;height:28px;border:none;cursor:pointer;
+  background:#fff;color:#1B9A7B;
+  display:grid;place-items:center;
+  transition:background .15s;
+}
+.grill-qty-stepper button:hover{background:#f0fdf4}
+.grill-qty-stepper span{
+  min-width:32px;text-align:center;
+  font-size:13px;font-weight:700;color:#1F2937;
+}
+
+/* Address */
+.grill-address-wrap{padding:0 24px 12px;flex-shrink:0}
+.grill-address-input{
+  width:100%;padding:10px 14px;border-radius:10px;
+  border:1px solid #e5e7eb;font-family:inherit;font-size:14px;
+  color:#1F2937;outline:none;
+}
+.grill-address-input:focus{border-color:#1B9A7B}
+
+/* Summary */
+.grill-summary{
+  padding:16px 24px;
+  flex-shrink:0;
+}
+.grill-summary-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:14px;color:#374151;margin-bottom:8px;
+}
+.grill-summary-green{color:#1B9A7B;font-weight:600}
+.grill-summary-red{color:#EF4444;font-weight:600}
+.grill-summary-divider{
+  height:1px;background:#e5e7eb;margin:8px 0 12px;
+}
+.grill-total-row{font-size:16px;font-weight:700;color:#1F2937}
+.grill-total-value{font-size:18px;font-weight:800}
+
+/* Payments */
+.grill-payments{
+  padding:16px 24px 24px;
+  flex-shrink:0;
+  border-top:1px solid #f3f4f6;
+}
+.grill-payments-title{font-size:16px;font-weight:700;color:#1F2937;margin:0 0 12px}
+.grill-pay-methods{display:flex;gap:8px;margin-bottom:16px}
+.grill-pay-btn{
+  flex:1;padding:10px;border-radius:10px;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;
+  background:#fff;border:1.5px solid #e5e7eb;color:#374151;
+  transition:all .15s;
+}
+.grill-pay-btn:hover{border-color:#1B9A7B;color:#1B9A7B}
+.grill-pay-btn.active{
+  background:#1F2937;color:#fff;border-color:#1F2937;
+}
+.grill-checkout-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+  background:#1B9A7B;color:#fff;
+  font-family:inherit;font-size:15px;font-weight:700;
+  transition:background .15s,transform .1s;
+  box-shadow:0 6px 20px rgba(27,154,123,0.25);
+}
+.grill-checkout-btn:hover{background:#16A34A}
+.grill-checkout-btn:active{transform:scale(.97)}
+.grill-checkout-btn:disabled{background:#d1d5db;cursor:not-allowed;box-shadow:none}
+
+/* Success toast */
+.grill-success-toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:#1B9A7B;color:#fff;
+  padding:14px 28px;border-radius:12px;
+  font-size:15px;font-weight:700;z-index:999;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 8px 30px rgba(27,154,123,0.3);
+}
+
+/* ===== Responsive ===== */
+@media(max-width:1100px){
+  .grill-food-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:900px){
+  .grill-page{grid-template-columns:1fr}
+  .grill-sidebar{
+    position:fixed;right:0;top:0;bottom:0;
+    width:380px;max-width:90vw;z-index:100;
+    transform:translateX(100%);
+    transition:transform .3s ease;
+  }
+  .grill-sidebar.show{transform:translateX(0)}
+}
+@media(max-width:520px){
+  .grill-main{padding:0 16px 16px}
+  .grill-food-grid{grid-template-columns:1fr}
+  .grill-restaurant-name{font-size:26px}
+  .grill-search-wrap{width:100%}
+}

@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { MapPin, User, LogOut, Store } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, User, LogOut } from 'lucide-react';
 import { useAuth } from '../App.jsx';
 import CitySelector from './CitySelector.jsx';
 import './navbar.css';
@@ -43,9 +43,30 @@ function MagneticButton({ children, className = '', onClick }) {
 
 export default function Navbar() {
   const { user, logout, navigate, city, setCity } = useAuth();
+  const [visible, setVisible] = useState(true);
+  const lastScroll = useRef(0);
+
+  useEffect(() => {
+    function handleScroll() {
+      const current = window.scrollY;
+      if (current <= 10) {
+        setVisible(true);
+      } else if (current > lastScroll.current && current > 80) {
+        setVisible(false);
+      } else if (current < lastScroll.current) {
+        setVisible(true);
+      }
+      lastScroll.current = current;
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <header className="navbar mm-navbar">
+    <header className="navbar mm-navbar" style={{
+      transform: visible ? 'translateY(0)' : 'translateY(-100%)',
+      transition: 'transform .35s ease',
+    }}>
       <button className="brand mm-brand" onClick={() => navigate('home')}>
         <span className="logo mm-logo">SS</span>
         <span>Service Sphere</span>
@@ -66,10 +87,6 @@ export default function Navbar() {
             Vendor Dashboard
           </MagneticButton>
         )}
-
-        <MagneticButton className="mm-nav-btn mm-nav-btn-store" onClick={() => navigate('vendor-signup')}>
-          <Store size={17} /> List your service
-        </MagneticButton>
 
         {!user ? (
           <MagneticButton className="mm-nav-btn mm-nav-btn-primary" onClick={() => navigate('login')}>

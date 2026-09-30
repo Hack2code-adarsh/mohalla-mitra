@@ -12,6 +12,7 @@
   background: transparent;
   cursor: pointer;
   font-weight: 700;
+  color: #fff;
 }
 
 .mm-logo {
@@ -21,7 +22,7 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #0EA5A0, #1E7F72);
+  background: linear-gradient(135deg, #4cceac, #0EA5A0);
   color: #fff;
   font-size: 17px;
   font-weight: 700;
@@ -75,13 +76,14 @@
   border-radius: 999px;
   font-weight: 600;
   font-size: 13.5px;
-  color: #1B1F3B;
-  background: rgba(27, 31, 59, 0.05);
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .mm-nav-btn:hover {
-  background: rgba(27, 31, 59, 0.1);
-  box-shadow: 0 6px 14px rgba(27, 31, 59, 0.12);
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
 }
 
 .mm-nav-btn-store {
@@ -94,9 +96,10 @@
 }
 
 .mm-nav-btn-primary {
-  background: linear-gradient(135deg, #0EA5A0, #1E7F72);
-  color: #fff;
-  box-shadow: 0 8px 18px rgba(14, 165, 160, 0.35);
+  background: linear-gradient(135deg, #4cceac, #0EA5A0);
+  color: #0a0e1a;
+  border: none;
+  box-shadow: 0 8px 18px rgba(76,206,172,0.35);
 }
 .mm-nav-btn-primary:hover {
   box-shadow: 0 10px 22px rgba(14, 165, 160, 0.45);

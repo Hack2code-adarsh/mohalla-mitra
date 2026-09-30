@@ -1,10 +1,58 @@
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timedelta
 from pathlib import Path
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2 import pool as pg_pool
+
+# Connection pool for faster cloud DB access
+_pg_pool = None
+
+def get_pool():
+    global _pg_pool
+    if _pg_pool is None:
+        _pg_pool = pg_pool.SimpleConnectionPool(1, 10, DATABASE_URL)
+    return _pg_pool
+
+def connect():
+    conn = get_pool().getconn()
+    return PgConnWrapper(conn)
+
+# Override close to return connection to pool instead of closing
+class PgConnWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, query, params=()):
+        cur = self._conn.cursor(cursor_factory=RealDictCursor)
+        q = query.replace("?", "%s")
+        cur.execute(q, params)
+        self._last_cur = cur
+        return PgCursorWrapper(cur)
+
+    def executescript(self, script):
+        cur = self._conn.cursor()
+        cur.execute(script)
+        cur.close()
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.commit()
+        get_pool().putconn(self._conn)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._conn.commit()
+        get_pool().putconn(self._conn)
+from dotenv import load_dotenv
 import secrets
 import random
 import hashlib
@@ -14,21 +62,35 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-DB_PATH = Path(__file__).with_name("Service Sphere.db")
+load_dotenv()
+
 MODEL_PATH = Path(__file__).with_name("vendor_ranking_model.pkl")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI(title="Service Sphere API", version="3.0.0")
 
+# Create uploads directory and serve static files
+UPLOAD_DIR = Path(__file__).with_name("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
+_DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+_CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 CITIES = ["Kanpur", "Delhi", "Lucknow", "Gurugram", "Noida"]
-CATEGORIES = ["Electrician", "Plumber", "Tutor", "Tiffin", "Bike Mechanic", "Salon"]
+CATEGORIES = [
+    "Electrician", "Plumber", "Tutor", "Tiffin", "Bike Mechanic", "Salon",
+    "Cleaner", "Carpenter", "Painter", "ACRepair",
+    "Restaurant", "Sweets", "Cafe", "Provision Store", "Stationery",
+    "Ice Cream", "Bakery", "Grocery", "Florist", "General Store",
+]
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "1009125264293-gh5gcga6tosa7tse5e10r27upq7eip40.apps.googleusercontent.com")
 
 sentiment_analyzer = SentimentIntensityAnalyzer()
@@ -39,10 +101,32 @@ except Exception:
     ranking_model = None
 
 
-def connect():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+class PgCursorWrapper:
+    """Wraps psycopg2 cursor to mimic sqlite3 Row interface."""
+    def __init__(self, cur):
+        self._cur = cur
+
+    def execute(self, query, params=()):
+        # Convert ? placeholders to %s for PostgreSQL
+        q = query.replace("?", "%s")
+        self._cur.execute(q, params)
+        return self
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    @property
+    def lastrowid(self):
+        # PostgreSQL: use RETURNING id or currval
+        try:
+            self._cur.execute("SELECT lastval()")
+            row = self._cur.fetchone()
+            return row["lastval"] if row else None
+        except Exception:
+            return None
 
 
 def row_to_dict(row):
@@ -73,34 +157,37 @@ def check_password(password: str, salt: str, password_hash: str):
 
 def init_db():
     with connect() as conn:
-        conn.executescript("""
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             identifier TEXT NOT NULL UNIQUE,
             role TEXT NOT NULL CHECK(role IN ('customer', 'vendor')),
             city TEXT NOT NULL,
             auth_method TEXT NOT NULL DEFAULT 'otp',
+            username TEXT,
+            password_hash TEXT,
+            password_salt TEXT,
             created_at TEXT NOT NULL
-        );
-
+        )""")
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS otp_codes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             identifier TEXT NOT NULL,
             code TEXT NOT NULL,
             expires_at TEXT NOT NULL,
             used INTEGER NOT NULL DEFAULT 0
-        );
-
+        )""")
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
             token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
             created_at TEXT NOT NULL,
             FOREIGN KEY(user_id) REFERENCES users(id)
-        );
-
+        )""")
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS vendors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             owner_user_id INTEGER,
             name TEXT NOT NULL,
             category TEXT NOT NULL,
@@ -113,12 +200,14 @@ def init_db():
             phone TEXT,
             description TEXT,
             verified INTEGER NOT NULL DEFAULT 0,
+            items TEXT DEFAULT '[]',
+            photos TEXT DEFAULT '[]',
             created_at TEXT NOT NULL,
             FOREIGN KEY(owner_user_id) REFERENCES users(id)
-        );
-
+        )""")
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             customer_user_id INTEGER NOT NULL,
             vendor_id INTEGER NOT NULL,
             service_category TEXT NOT NULL,
@@ -126,15 +215,17 @@ def init_db():
             address TEXT NOT NULL,
             preferred_time TEXT,
             notes TEXT,
+            order_items TEXT DEFAULT '[]',
+            total_amount INTEGER DEFAULT 0,
             status TEXT NOT NULL DEFAULT 'requested',
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             FOREIGN KEY(customer_user_id) REFERENCES users(id),
             FOREIGN KEY(vendor_id) REFERENCES vendors(id)
-        );
-
+        )""")
+        conn.execute("""
         CREATE TABLE IF NOT EXISTS reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             booking_id INTEGER NOT NULL UNIQUE,
             customer_user_id INTEGER NOT NULL,
             vendor_id INTEGER NOT NULL,
@@ -146,20 +237,32 @@ def init_db():
             FOREIGN KEY(booking_id) REFERENCES bookings(id),
             FOREIGN KEY(customer_user_id) REFERENCES users(id),
             FOREIGN KEY(vendor_id) REFERENCES vendors(id)
-        );
-        """)
+        )""")
 
-        user_columns = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
-        if "username" not in user_columns:
-            conn.execute("ALTER TABLE users ADD COLUMN username TEXT")
-        if "password_hash" not in user_columns:
-            conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
-        if "password_salt" not in user_columns:
-            conn.execute("ALTER TABLE users ADD COLUMN password_salt TEXT")
+        # Add new columns if they don't exist (for existing databases)
+        for col in ["items", "photos"]:
+            try:
+                conn.execute(f"ALTER TABLE vendors ADD COLUMN IF NOT EXISTS {col} TEXT DEFAULT '[]'")
+            except Exception:
+                pass
+        for col in ["order_items", "total_amount"]:
+            try:
+                conn.execute(f"ALTER TABLE bookings ADD COLUMN IF NOT EXISTS {col} TEXT DEFAULT '[]'" if col == "order_items" else f"ALTER TABLE bookings ADD COLUMN IF NOT EXISTS {col} INTEGER DEFAULT 0")
+            except Exception:
+                pass
 
-        existing = conn.execute("SELECT COUNT(*) AS count FROM vendors").fetchone()["count"]
-        if existing == 0:
+        # Create meta table for tracking seeding (prevents re-seeding after admin deletes)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS meta (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )""")
+
+        # Only seed ONCE ever — check meta table, not vendor count
+        seeded = conn.execute("SELECT value FROM meta WHERE key = 'seeded'").fetchone()
+        if not seeded:
             seed_vendors(conn)
+            conn.execute("INSERT INTO meta (key, value) VALUES ('seeded', 'true')")
 
 
 def seed_vendors(conn):
@@ -237,6 +340,8 @@ class VendorCreate(BaseModel):
     distance_km: float = 3.0
     phone: str = ""
     description: str = ""
+    items: str = "[]"
+    photos: str = "[]"
 
 
 class BookingCreate(BaseModel):
@@ -244,6 +349,8 @@ class BookingCreate(BaseModel):
     address: str
     preferred_time: Optional[str] = None
     notes: Optional[str] = None
+    order_items: Optional[str] = "[]"
+    total_amount: Optional[int] = 0
 
 
 class BookingStatusUpdate(BaseModel):
@@ -500,8 +607,12 @@ def list_vendors(
     for row in rows:
         v = row_to_dict(row)
         v["match_score"] = vendor_score(row, weights)
-        v["ai_match_score"] = ai_vendor_score(row)
         data.append(v)
+
+    # Batch AI predictions — disabled for performance (regular match_score works great)
+    for v in data:
+        v["ai_match_score"] = None
+
     return sorted(data, key=lambda x: x["match_score"], reverse=True)
 
 
@@ -515,13 +626,87 @@ def create_vendor(payload: VendorCreate, authorization: Optional[str] = Header(N
     with connect() as conn:
         cur = conn.execute(
             """INSERT INTO vendors
-            (owner_user_id, name, category, city, area, price, rating, response_minutes, distance_km, phone, description, verified, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 4.2, ?, ?, ?, ?, 0, ?)""",
+            (owner_user_id, name, category, city, area, price, rating, response_minutes, distance_km, phone, description, verified, items, photos, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, 4.2, %s, %s, %s, %s, 0, %s, %s, %s)""",
             (user["id"], payload.name, payload.category, payload.city, payload.area, payload.price,
-             payload.response_minutes, payload.distance_km, payload.phone, payload.description, now_iso()),
+             payload.response_minutes, payload.distance_km, payload.phone, payload.description,
+             payload.items, payload.photos, now_iso()),
         )
-        vendor = conn.execute("SELECT * FROM vendors WHERE id = ?", (cur.lastrowid,)).fetchone()
+        vendor = conn.execute("SELECT * FROM vendors WHERE id = %s", (cur.lastrowid,)).fetchone()
     return row_to_dict(vendor)
+
+
+@app.get("/api/vendors/{vendor_id}")
+def get_vendor(vendor_id: int):
+    with connect() as conn:
+        vendor = conn.execute("SELECT * FROM vendors WHERE id = %s", (vendor_id,)).fetchone()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    return row_to_dict(vendor)
+
+
+@app.get("/api/my-vendor")
+def get_my_vendor(authorization: Optional[str] = Header(None)):
+    user = require_user(authorization)
+    if user["role"] != "vendor":
+        raise HTTPException(status_code=403, detail="Only vendor accounts")
+    with connect() as conn:
+        vendor = conn.execute("SELECT * FROM vendors WHERE owner_user_id = ?", (user["id"],)).fetchone()
+    if not vendor:
+        return None
+    return row_to_dict(vendor)
+
+
+class VendorUpdate(BaseModel):
+    name: Optional[str] = None
+    area: Optional[str] = None
+    price: Optional[int] = None
+    response_minutes: Optional[int] = None
+    distance_km: Optional[int] = None
+    phone: Optional[str] = None
+    description: Optional[str] = None
+    items: Optional[str] = None
+    photos: Optional[str] = None
+
+
+@app.patch("/api/vendors/{vendor_id}")
+def update_vendor(vendor_id: int, payload: VendorUpdate, authorization: Optional[str] = Header(None)):
+    user = require_user(authorization)
+    with connect() as conn:
+        vendor = conn.execute("SELECT * FROM vendors WHERE id = ?", (vendor_id,)).fetchone()
+        if not vendor:
+            raise HTTPException(status_code=404, detail="Vendor not found")
+        if vendor["owner_user_id"] != user["id"]:
+            raise HTTPException(status_code=403, detail="Not your listing")
+        fields = []
+        params = []
+        for k in ["name", "area", "price", "response_minutes", "distance_km", "phone", "description", "items", "photos"]:
+            v = getattr(payload, k)
+            if v is not None:
+                fields.append(f"{k} = ?")
+                params.append(v)
+        if fields:
+            params.append(vendor_id)
+            conn.execute(f"UPDATE vendors SET {', '.join(fields)} WHERE id = ?", params)
+        updated = conn.execute("SELECT * FROM vendors WHERE id = %s", (vendor_id,)).fetchone()
+    return row_to_dict(updated)
+
+
+@app.post("/api/upload")
+async def upload_image(request: Request, file: UploadFile = File(...), authorization: Optional[str] = Header(None)):
+    user = require_user(authorization)
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    if ext not in ["jpg", "jpeg", "png", "gif", "webp"]:
+        ext = "jpg"
+    filename = f"{secrets.token_hex(8)}.{ext}"
+    filepath = UPLOAD_DIR / filename
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    base = os.getenv("BASE_URL", str(request.base_url).rstrip("/"))
+    return {"url": f"{base}/uploads/{filename}", "filename": filename}
 
 
 @app.post("/api/bookings")
@@ -530,15 +715,15 @@ def create_booking(payload: BookingCreate, authorization: Optional[str] = Header
     if user["role"] != "customer":
         raise HTTPException(status_code=403, detail="Only customers can create bookings")
     with connect() as conn:
-        vendor = conn.execute("SELECT * FROM vendors WHERE id = ?", (payload.vendor_id,)).fetchone()
+        vendor = conn.execute("SELECT * FROM vendors WHERE id = %s", (payload.vendor_id,)).fetchone()
         if not vendor:
             raise HTTPException(status_code=404, detail="Vendor not found")
         cur = conn.execute(
             """INSERT INTO bookings
-            (customer_user_id, vendor_id, service_category, city, address, preferred_time, notes, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?)""",
+            (customer_user_id, vendor_id, service_category, city, address, preferred_time, notes, order_items, total_amount, status, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'requested', %s, %s)""",
             (user["id"], vendor["id"], vendor["category"], vendor["city"], payload.address,
-             payload.preferred_time, payload.notes, now_iso(), now_iso()),
+             payload.preferred_time, payload.notes, payload.order_items, payload.total_amount, now_iso(), now_iso()),
         )
         booking = booking_with_details(conn, cur.lastrowid)
     return booking
@@ -668,3 +853,157 @@ def vendor_reviews(vendor_id: int):
             (vendor_id,),
         ).fetchall()
     return [row_to_dict(r) for r in rows]
+
+
+# ==================== ADMIN ENDPOINTS ====================
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/api/admin/login")
+def admin_login(payload: AdminLoginRequest):
+    if payload.username != ADMIN_USERNAME or payload.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+    token = "admin_" + secrets.token_urlsafe(32)
+    return {
+        "token": token,
+        "user": {
+            "id": 0,
+            "name": "Administrator",
+            "role": "admin",
+            "city": "All",
+            "username": ADMIN_USERNAME,
+        },
+    }
+
+
+def require_admin(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    token = authorization.split(" ")[1]
+    if not token.startswith("admin_"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return {"id": 0, "name": "Administrator", "role": "admin"}
+
+
+@app.get("/api/admin/stats")
+def admin_stats(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        total_users = conn.execute("SELECT COUNT(*) AS c FROM users").fetchone()["c"]
+        total_vendors = conn.execute("SELECT COUNT(*) AS c FROM vendors").fetchone()["c"]
+        total_bookings = conn.execute("SELECT COUNT(*) AS c FROM bookings").fetchone()["c"]
+        total_reviews = conn.execute("SELECT COUNT(*) AS c FROM reviews").fetchone()["c"]
+        customers = conn.execute("SELECT COUNT(*) AS c FROM users WHERE role='customer'").fetchone()["c"]
+        vendors_u = conn.execute("SELECT COUNT(*) AS c FROM users WHERE role='vendor'").fetchone()["c"]
+        pending_vendors = conn.execute("SELECT COUNT(*) AS c FROM vendors WHERE verified=0").fetchone()["c"]
+        verified_vendors = conn.execute("SELECT COUNT(*) AS c FROM vendors WHERE verified=1").fetchone()["c"]
+        completed = conn.execute("SELECT COUNT(*) AS c FROM bookings WHERE status='completed'").fetchone()["c"]
+        pending_bookings = conn.execute("SELECT COUNT(*) AS c FROM bookings WHERE status='requested'").fetchone()["c"]
+        cancelled = conn.execute("SELECT COUNT(*) AS c FROM bookings WHERE status='cancelled'").fetchone()["c"]
+        # city-wise stats
+        city_stats = conn.execute(
+            "SELECT city, COUNT(*) AS c FROM users GROUP BY city ORDER BY c DESC"
+        ).fetchall()
+        # category-wise vendors
+        cat_stats = conn.execute(
+            "SELECT category, COUNT(*) AS c FROM vendors GROUP BY category ORDER BY c DESC"
+        ).fetchall()
+    return {
+        "total_users": total_users,
+        "total_vendors": total_vendors,
+        "total_bookings": total_bookings,
+        "total_reviews": total_reviews,
+        "customers": customers,
+        "vendors": vendors_u,
+        "pending_vendors": pending_vendors,
+        "verified_vendors": verified_vendors,
+        "completed_bookings": completed,
+        "pending_bookings": pending_bookings,
+        "cancelled_bookings": cancelled,
+        "city_stats": [row_to_dict(r) for r in city_stats],
+        "category_stats": [row_to_dict(r) for r in cat_stats],
+    }
+
+
+@app.get("/api/admin/users")
+def admin_users(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT id, name, identifier, username, role, city, auth_method, created_at FROM users ORDER BY id DESC"
+        ).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.get("/api/admin/vendors")
+def admin_vendors(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT v.*, u.name AS owner_name FROM vendors v
+            LEFT JOIN users u ON u.id = v.owner_user_id
+            ORDER BY v.id DESC"""
+        ).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.get("/api/admin/bookings")
+def admin_bookings(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT b.*, u.name AS customer_name, v.name AS vendor_name
+            FROM bookings b
+            JOIN users u ON u.id = b.customer_user_id
+            JOIN vendors v ON v.id = b.vendor_id
+            ORDER BY b.id DESC"""
+        ).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.get("/api/admin/reviews")
+def admin_reviews(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT r.*, u.name AS customer_name, v.name AS vendor_name
+            FROM reviews r
+            JOIN users u ON u.id = r.customer_user_id
+            JOIN vendors v ON v.id = r.vendor_id
+            ORDER BY r.id DESC"""
+        ).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.patch("/api/admin/vendors/{vendor_id}/verify")
+def admin_verify_vendor(vendor_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        conn.execute("UPDATE vendors SET verified = 1 WHERE id = ?", (vendor_id,))
+        vendor = conn.execute("SELECT * FROM vendors WHERE id = ?", (vendor_id,)).fetchone()
+    return row_to_dict(vendor)
+
+
+@app.delete("/api/admin/vendors/{vendor_id}")
+def admin_delete_vendor(vendor_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        conn.execute("DELETE FROM vendors WHERE id = ?", (vendor_id,))
+    return {"ok": True}
+
+
+@app.delete("/api/admin/users/{user_id}")
+def admin_delete_user(user_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    with connect() as conn:
+        conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM vendors WHERE owner_user_id = ?", (user_id,))
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    return {"ok": True}

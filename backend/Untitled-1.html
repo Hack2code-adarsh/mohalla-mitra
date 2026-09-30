@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <center>
+    <form id="studentForm" action="">
+        <h1>Student Registration</h1>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name"><br><br>
+        <label for="rollNo">Roll No</label>
+        <input type="text" name="rollNo" id="rollNo"><br><br>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email"><br><br>
+        <label for="age">Age</label>
+        <input type="number" id="age" name="age" min="1"><br><br>
+        <label for="course">Course</label>
+        <select name="course" id="course">
+            <option value="">Select Option</option>
+            <option value="CSE">CSE</option>
+            <option value="AI">AI</option>
+            <option value="IT">IT</option>
+            <option value="ECE">ECE</option>
+        </select><br><br>
+        <button type="submit">Submit</button>
+        <p id="msg"></p>
+    </form>
+
+    <script>
+        const form = document.getElementById('studentForm');
+        const msg=document.getElementById('msg');
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            msg.innerText = `Registration submitted for ${name}.`;
+        });
+    </script>
+</body>
+</html>

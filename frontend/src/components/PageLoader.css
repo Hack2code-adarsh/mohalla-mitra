@@ -1,0 +1,47 @@
+:root{
+  --pl-major:#EF836E;
+  --pl-minor:#eaeaea;
+  --pl-dur:1.25s;
+}
+.pl-root{position:relative;width:100%}
+.pl-content{opacity:0;transform:translateY(12px);transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1)}
+.pl-root.pl-loaded .pl-content{opacity:1;transform:translateY(0);transition-delay:.2s}
+.pl-overlay{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(11,17,25,0.97);backdrop-filter:blur(3px);overflow:hidden;pointer-events:auto;transition:opacity .5s ease, visibility .5s ease}
+.pl-root.pl-loaded .pl-overlay{opacity:0;visibility:hidden;pointer-events:none;transition-delay:1.25s}
+.pl-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(1);width:120px;height:120px;z-index:99999;will-change:transform;transition:transform 1.25s ease-in-out 1.25s}
+.pl-root.pl-loaded .pl-loader{transform:translate(-50%,-50%) scale(0)}
+.pl-loader g,.pl-loader circle{transform-origin:50% 50%;transform-box:fill-box}
+.pl-core > .pl-path{fill:var(--pl-major);visibility:hidden;transform:scale(1);transition:all calc(var(--pl-dur) / 2) calc(var(--pl-dur) / 8) ease-in-out}
+.pl-root.pl-loaded .pl-core > .pl-path{animation:pl-core-loaded calc(var(--pl-dur) * 2) ease-in-out}
+@keyframes pl-core-loaded{0%{visibility:hidden;transform:scale(1)}25%,85%{opacity:1;visibility:visible;transform:scale(1000)}100%{opacity:0;transform:scale(1)}}
+.pl-spinner{opacity:1;transition:opacity .1s .1s;animation:pl-rotate var(--pl-dur) linear infinite}
+.pl-root.pl-loaded .pl-spinner{opacity:0}
+.pl-spinner > .pl-path{stroke:var(--pl-major);stroke-width:6;stroke-dasharray:157;stroke-dashoffset:157;animation:pl-spinner-anim var(--pl-dur) both infinite ease-in-out}
+@keyframes pl-rotate{0%{transform:rotate(0deg)}100%{transform:rotate(270deg)}}
+@keyframes pl-spinner-anim{0%{stroke-dasharray:157;stroke-dashoffset:157}65%{stroke-dasharray:157;stroke-dashoffset:39.25;transform:rotate(135deg)}100%{stroke-dasharray:157;stroke-dashoffset:157;transform:rotate(450deg)}}
+.pl-layer-1 > .pl-path{stroke:rgba(234,234,234,0.5);stroke-width:15;stroke-dasharray:1508;stroke-dashoffset:1508;visibility:hidden;transform:rotate(-30deg)}
+.pl-root.pl-loaded .pl-layer-1 > .pl-path{visibility:visible;animation:pl-layer-1 var(--pl-dur) ease-in}
+@keyframes pl-layer-1{0%{stroke-dasharray:1508;stroke-dashoffset:1508}75%{stroke-width:15;stroke-dashoffset:754}100%{stroke:#eaeaea;stroke-width:225;stroke-dasharray:1514;stroke-dashoffset:0;transform:rotate(450deg)}}
+.pl-layer-2 > .pl-path{stroke:rgba(234,234,234,0.3);stroke-width:20;stroke-dasharray:1508;stroke-dashoffset:1508;visibility:hidden;transform:rotate(-60deg)}
+.pl-root.pl-loaded .pl-layer-2 > .pl-path{visibility:visible;animation:pl-layer-2 var(--pl-dur) ease-in}
+@keyframes pl-layer-2{0%{stroke-dasharray:1508;stroke-dashoffset:1508}75%{stroke-width:20;stroke-dashoffset:754}100%{stroke:#eaeaea;stroke-width:60;stroke-dasharray:1514;stroke-dashoffset:0;transform:rotate(420deg)}}
+.pl-layer-3 > .pl-path{stroke:rgba(234,234,234,0.8);stroke-width:40;stroke-dasharray:1131;stroke-dashoffset:1131;visibility:hidden;transform:rotate(-70deg)}
+.pl-root.pl-loaded .pl-layer-3 > .pl-path{visibility:visible;animation:pl-layer-3 var(--pl-dur) ease-in}
+@keyframes pl-layer-3{0%{stroke-dasharray:1131;stroke-dashoffset:1131}75%{stroke-width:40;stroke-dashoffset:566}100%{stroke:#eaeaea;stroke-width:120;stroke-dasharray:1137;stroke-dashoffset:0;transform:rotate(410deg)}}
+.pl-layer-4 > .pl-path{stroke:rgba(234,234,234,0.6);stroke-width:20;stroke-dasharray:1508;stroke-dashoffset:1508;visibility:hidden;transform:rotate(-90deg)}
+.pl-root.pl-loaded .pl-layer-4 > .pl-path{visibility:visible;animation:pl-layer-4 var(--pl-dur) ease-in}
+@keyframes pl-layer-4{0%{stroke-dasharray:1508;stroke-dashoffset:1508}75%{stroke-width:20;stroke-dashoffset:754}100%{stroke:#eaeaea;stroke-width:60;stroke-dasharray:1514;stroke-dashoffset:0;transform:rotate(390deg)}}
+.pl-layer-5 > .pl-path{stroke:rgba(234,234,234,0.5);stroke-width:30;stroke-dasharray:1885;stroke-dashoffset:1885;visibility:hidden;transform:rotate(-20deg)}
+.pl-root.pl-loaded .pl-layer-5 > .pl-path{visibility:visible;animation:pl-layer-5 var(--pl-dur) ease-in}
+@keyframes pl-layer-5{0%{stroke-dasharray:1885;stroke-dashoffset:1885}75%{stroke-width:30;stroke-dashoffset:943}100%{stroke:#eaeaea;stroke-width:90;stroke-dasharray:1891;stroke-dashoffset:0;transform:rotate(460deg)}}
+.pl-layer-6 > .pl-path{stroke:rgba(234,234,234,0.2);stroke-width:45;stroke-dasharray:2388;stroke-dashoffset:2388;visibility:hidden;transform:rotate(-80deg)}
+.pl-root.pl-loaded .pl-layer-6 > .pl-path{visibility:visible;animation:pl-layer-6 var(--pl-dur) ease-in}
+@keyframes pl-layer-6{0%{stroke-dasharray:2388;stroke-dashoffset:2388}75%{stroke-width:45;stroke-dashoffset:1194}100%{stroke:#eaeaea;stroke-width:135;stroke-dasharray:2394;stroke-dashoffset:0;transform:rotate(400deg)}}
+.pl-layer-7 > .pl-path{stroke:rgba(234,234,234,1);stroke-width:75;stroke-dasharray:2827;stroke-dashoffset:2827;visibility:hidden;transform:rotate(-10deg)}
+.pl-root.pl-loaded .pl-layer-7 > .pl-path{visibility:visible;animation:pl-layer-7 var(--pl-dur) ease-in}
+@keyframes pl-layer-7{0%{stroke-dasharray:2827;stroke-dashoffset:2827}75%{stroke-width:75;stroke-dashoffset:1414}100%{stroke:#eaeaea;stroke-width:225;stroke-dasharray:2833;stroke-dashoffset:0;transform:rotate(470deg)}}
+.pl-layer-8 > .pl-path{stroke:rgba(234,234,234,0.5);stroke-width:250;stroke-dasharray:3391;stroke-dashoffset:3391;visibility:hidden;transform:rotate(-70deg)}
+.pl-root.pl-loaded .pl-layer-8 > .pl-path{visibility:visible;animation:pl-layer-8 var(--pl-dur) ease-in}
+@keyframes pl-layer-8{0%{stroke-dasharray:3391;stroke-dashoffset:3391}75%{stroke-width:250;stroke-dashoffset:1696}100%{stroke:#eaeaea;stroke-width:750;stroke-dasharray:3397;stroke-dashoffset:0;transform:rotate(410deg)}}
+.pl-loader,.pl-core,.pl-spinner,.pl-path{transform:translateZ(0)}
+@media(prefers-reduced-motion:reduce){.pl-spinner,.pl-spinner > .pl-path,.pl-core > .pl-path,.pl-layer-1 > .pl-path,.pl-layer-2 > .pl-path,.pl-layer-3 > .pl-path,.pl-layer-4 > .pl-path,.pl-layer-5 > .pl-path,.pl-layer-6 > .pl-path,.pl-layer-7 > .pl-path,.pl-layer-8 > .pl-path{animation:none !important}.pl-overlay{display:none}.pl-content{opacity:1;transform:none;transition:none}}

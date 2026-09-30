@@ -148,3 +148,67 @@ The app now supports registering with:
 - City
 
 After registration, users can log in next time using either their username or email plus password. Passwords are not stored directly; the backend stores a salted hash for demo-level security.
+
+## Deployment
+
+This repo is set up to deploy the **backend on Render** and the **frontend on Vercel**. Config files already exist: `render.yaml` (repo root) and `frontend/vercel.json`.
+
+### Step 0 — Commit and push
+
+Push all current changes to GitHub first (Render and Vercel both deploy from the `main` branch):
+
+```powershell
+git add -A
+git commit -m "Add deployment configs and production-ready CORS/upload handling"
+git push origin main
+```
+
+### Step 1 — Deploy backend on Render
+
+1. Go to <https://dashboard.render.com> → **New** → **Blueprint**.
+2. Select the `Hack2code-adarsh/mohalla-mitra` repository. Render reads `render.yaml` automatically.
+3. Add these environment variables in the Render dashboard (the `sync: false` ones):
+
+   | Key | Value |
+   |-----|-------|
+   | `DATABASE_URL` | Your Neon connection string (same as in `backend/.env`) |
+   | `CORS_ORIGINS` | Your Vercel frontend URL, e.g. `https://mohalla-mitra.vercel.app` (add `http://localhost:5173` too, comma-separated, for local testing) |
+   | `GOOGLE_CLIENT_ID` | `1009125264293-gh5gcga6tosa7tse5e10r27upq7eip40.apps.googleusercontent.com` |
+
+4. Deploy. The health check endpoint is `/api/health`. Once live, note the backend URL, e.g. `https://mohalla-mitra-backend.onrender.com`.
+
+### Step 2 — Deploy frontend on Vercel
+
+1. Go to <https://vercel.com/new`>.
+2. Import the `Hack2code-adarsh/mohalla-mitra` repository.
+3. **Root Directory** → set to `frontend` (important — the Vite app lives there).
+4. Framework preset should auto-detect **Vite** (see `frontend/vercel.json`).
+5. Add this environment variable:
+
+   | Key | Value |
+   |-----|-------|
+   | `VITE_API_BASE` | Your Render backend URL, e.g. `https://mohalla-mitra-backend.onrender.com` (no trailing slash) |
+
+6. Deploy. Note the frontend URL, e.g. `https://mohalla-mitra.vercel.app`.
+
+### Step 3 — Wire them together
+
+1. Copy your Vercel frontend URL back into Render's `CORS_ORIGINS` env var (so the backend accepts requests from the frontend).
+2. Redeploy both if you changed env vars after the first deploy.
+
+### Step 4 — Google OAuth (production origins)
+
+In Google Cloud Console → APIs & Services → Credentials → your OAuth 2.0 Client ID → **Authorized JavaScript origins**, add both:
+
+```text
+https://mohalla-mitra.vercel.app
+http://localhost:5173
+```
+
+Without this, Google login will fail on the deployed site.
+
+### Notes and limitations
+
+- **Uploads are ephemeral on Render**: the free tier uses a disposable filesystem. Uploaded vendor photos work during a single deploy but are wiped on the next redeploy. For persistent uploads, connect cloud storage (e.g. Cloudinary, S3, or Supabase Storage) and change the `/api/upload` endpoint.
+- **Render free tier sleeps**: the backend sleeps after 15 min of inactivity, so the first request after sleep takes ~30–60s to wake up.
+- **`DATABASE_URL` is never committed** — it lives only in `backend/.env` (local) and Render env vars (production). The `.gitignore` excludes it.
